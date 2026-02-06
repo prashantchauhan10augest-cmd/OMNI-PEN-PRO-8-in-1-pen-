@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniPen Pro - 8-in-1 Design Model</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        
+        /* UI Panel Styling (Dark Mode) */
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 20, 20, 0.90);
+            padding: 20px;
+            border-radius: 8px;
+            color: #eee;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.8);
+            width: 320px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        h1 { margin: 0; font-size: 22px; color: #00d2ff; font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase; font-style: italic; }
+        h2 { margin: 0; font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+        
+        .section-title { font-size: 10px; font-weight: 700; color: #666; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+
+        /* Display Box */
+        #status-display {
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #444;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .tool-name { font-size: 18px; font-weight: bold; display: block; margin-bottom: 4px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .tool-meta { font-size: 11px; color: #888; font-family: monospace; }
+
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 12px 14px;
+            background: #2b2b2b;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #ccc;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
+        }
+        button:hover { background: #3a3a3a; border-color: #666; color: #fff; }
+        button:active { transform: translateY(1px); }
+        button.active { background: #0066cc; color: white; border-color: #0088ff; box-shadow: 0 0 10px rgba(0,102,204,0.4); }
+        
+        /* Part Tree (Left Side) */
+        #part-tree {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(20, 20, 20, 0.85);
+            padding: 15px;
+            border-radius: 8px;
+            width: 240px;
+            font-size: 10px;
+            font-family: 'Consolas', monospace;
+            border: 1px solid #333;
+            pointer-events: none;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #888;
+        }
+        .tree-item { padding: 3px 0; color: #aaa; }
+        .tree-indent { margin-left: 12px; border-left: 1px solid #444; padding-left: 6px; }
+        .highlight { color: #00d2ff; font-weight: bold; background: rgba(0, 210, 255, 0.05); }
+        .tree-header { font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 5px; color: #fff; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Left Panel: BOM / Part Tree based on Section 15 -->
+    <div id="part-tree">
+        <div class="tree-header">ASSEMBLY HIERARCHY</div>
+        <div class="tree-item">1.0 OMNIPEN PRO ASSEMBLY</div>
+        <div class="tree-indent">
+            <div class="tree-item">1.1 EXTERNAL HOUSING (BLK)</div>
+            <div class="tree-indent">
+                 <div class="tree-item">1.1.1 GRIP SECTION (RUBBER)</div>
+                 <div class="tree-item">1.1.2 UPPER BARREL (ALU)</div>
+                 <div class="tree-item">1.1.3 TIP CONE (CHROME)</div>
+            </div>
+            <div class="tree-item">1.2 SELECTOR DIAL</div>
+            <div class="tree-indent">
+                 <div class="tree-item">1.2.1 RING BODY</div>
+                 <div class="tree-item">1.2.2 INDICATOR TILES</div>
+            </div>
+            <div class="tree-item">1.3 CARTRIDGE DRUM</div>
+            <div class="tree-indent">
+                 <div class="tree-item">1.3.1 DRUM CHASSIS (Ø10mm)</div>
+                 <div class="tree-item highlight">1.3.2 MODULES (x7)</div>
+            </div>
+            <div class="tree-item">1.4 INTERNAL MECHANISM</div>
+            <div class="tree-indent">
+                 <div class="tree-item">1.4.1 CAM SLEEVE</div>
+                 <div class="tree-item">1.4.2 PLUNGER ROD</div>
+                 <div class="tree-item">1.4.3 MAIN SPRING</div>
+            </div>
+            <div class="tree-item">1.5 TOP ERASER</div>
+            <div class="tree-indent">
+                 <div class="tree-item">1.5.1 TWIST CAP</div>
+                 <div class="tree-item">1.5.2 WHITE ERASER</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Controls -->
+    <div id="ui-panel">
+        <div>
+            <h1>OmniPen Pro</h1>
+            <h2>8-in-1 Multifunction</h2>
+        </div>
+        
+        <div id="status-display">
+            <span class="tool-name" id="tool-name">Blue Ink</span>
+            <span class="tool-meta">Ballpoint • Fine 0.7mm</span>
+        </div>
+
+        <div>
+            <div class="section-title">Controls</div>
+            <button id="btn-rotate">
+                ROTATE DIAL
+                <span>⟳</span>
+            </button>
+            <button id="btn-click">
+                CLICK TO EXTEND
+                <span id="click-status">OFF</span>
+            </button>
+            <button id="btn-twist">
+                TWIST ERASER
+                <span id="eraser-status">0%</span>
+            </button>
+        </div>
+
+        <div>
+            <div class="section-title">Views</div>
+            <button id="btn-cutaway">X-RAY / CUTAWAY</button>
+            <button id="btn-explode">EXPLODED VIEW</button>
+            <button id="btn-shell">TOGGLE SHELL</button>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <!-- Three.js Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // --- 1. SYSTEM CONFIGURATION ---
+        const CONFIG = {
+            length: 148,         // Total Pen Length (mm)
+            od: 13.5,            // Outer Diameter (mm) - INCREASED per image ("Pro" size)
+            wall: 1.0,           // Wall thickness
+            drumOD: 10.0,        // Drum Diameter (mm) - Increased for capacity
+            drumRadius: 3.5,     // Effective radius for cartridge centers
+            refillDia: 2.3,      // D1 refill diameter
+            tapeWidth: 2.5,      // Correction tape width
+            tipOpen: 3.2,        // Tip opening
+            animSpeed: 0.2
+        };
+
+        const STATE = {
+            index: 0,
+            extended: false,
+            eraserPos: 0,
+            cutaway: false,
+            exploded: false,
+            shellVisible: true,
+            drumAngle: 0
+        };
+
+        const MODULES = [
+            { id: 'blue', name: 'Blue Ink', color: 0x0044aa, type: 'std' },
+            { id: 'black', name: 'Black Ink', color: 0x111111, type: 'std' },
+            { id: 'red', name: 'Red Ink', color: 0xcc0000, type: 'std' },
+            { id: 'green', name: 'Green Ink', color: 0x009944, type: 'std' },
+            { id: 'pencil', name: '0.5mm Pencil', color: 0x888888, type: 'mech' },
+            { id: 'highlighter', name: 'Highlighter', color: 0xffff00, type: 'marker' },
+            { id: 'tape', name: 'Whitener', color: 0xffffff, type: 'tape' }
+        ];
+
+        // --- 2. SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a0a); // Deep black/void
+        // Radial gradient fake using fog
+        scene.fog = new THREE.FogExp2(0x050505, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(70, 60, 110); // Angled view
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, localClippingEnabled: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 30;
+        controls.maxDistance = 400;
+
+        // --- 3. LIGHTING (Dramatic Product Studio) ---
+        const ambiLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambiLight);
+
+        // Key Light (Cool Blue-White)
+        const keyLight = new THREE.SpotLight(0xddeeff, 1.5);
+        keyLight.position.set(-50, 80, 50);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 2048;
+        keyLight.shadow.mapSize.height = 2048;
+        keyLight.angle = Math.PI / 6;
+        scene.add(keyLight);
+
+        // Rim Light (Blue-ish like the poster background)
+        const rimLight = new THREE.DirectionalLight(0x0088ff, 1.0);
+        rimLight.position.set(50, 20, -50);
+        scene.add(rimLight);
+        
+        // Fill Light
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+        fillLight.position.set(20, -20, 20);
+        scene.add(fillLight);
+
+        // --- 4. MATERIALS (Updated to Black/Chrome) ---
+        
+        const clipPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+
+        // Black Body (Satin finish)
+        const matBodyBlack = new THREE.MeshStandardMaterial({
+            color: 0x1a1a1a,
+            roughness: 0.4,
+            metalness: 0.5,
+            side: THREE.DoubleSide,
+            clippingPlanes: [clipPlane],
+            clipShadows: true
+        });
+
+        // Rubber Grip (Darker, rougher)
+        const matGrip = new THREE.MeshStandardMaterial({
+            color: 0x111111,
+            roughness: 0.9,
+            metalness: 0.1,
+            clippingPlanes: [clipPlane]
+        });
+
+        // Polished Chrome (Tip, Clip, Accents)
+        const matChrome = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.05,
+            metalness: 1.0,
+            clippingPlanes: [clipPlane]
+        });
+
+        // Selector Ring (Black plastic/metal)
+        const matSelector = new THREE.MeshStandardMaterial({
+            color: 0x080808,
+            roughness: 0.3,
+            metalness: 0.6,
+            clippingPlanes: [clipPlane]
+        });
+
+        const matInternal = new THREE.MeshStandardMaterial({
+            color: 0x888888,
+            roughness: 0.4,
+            metalness: 0.5,
+            clippingPlanes: [clipPlane]
+        });
+
+        // --- 5. COMPONENT BUILDER ---
+
+        const penGroup = new THREE.Group();
+        penGroup.rotation.z = -Math.PI / 5; // Angled like poster
+        penGroup.rotation.y = Math.PI / 8;
+        scene.add(penGroup);
+
+        // === 5.1 OUTER SHELL ===
+        const shellGroup = new THREE.Group();
+        penGroup.add(shellGroup);
+
+        // Nose Cone (Chrome - 30deg)
+        const tipGeo = new THREE.CylinderGeometry(CONFIG.tipOpen/2, CONFIG.od/2 - 0.5, 14, 32);
+        const tip = new THREE.Mesh(tipGeo, matChrome);
+        tip.position.y = -62;
+        tip.castShadow = true;
+        shellGroup.add(tip);
+
+        // Black Ring Separator (between tip and grip)
+        const sepGeo = new THREE.CylinderGeometry(CONFIG.od/2 - 0.5, CONFIG.od/2, 2, 32);
+        const sep = new THREE.Mesh(sepGeo, matBodyBlack);
+        sep.position.y = -54;
+        shellGroup.add(sep);
+
+        // Grip Section (Rubberized Black)
+        const gripGeo = new THREE.CylinderGeometry(CONFIG.od/2, CONFIG.od/2, 42, 32);
+        const grip = new THREE.Mesh(gripGeo, matGrip);
+        grip.position.y = -32;
+        grip.castShadow = true;
+        shellGroup.add(grip);
+        
+        // Grip Ring Detail (Chrome ring above grip like image)
+        const gripRingGeo = new THREE.CylinderGeometry(CONFIG.od/2, CONFIG.od/2, 1.5, 32);
+        const gripRing = new THREE.Mesh(gripRingGeo, matChrome);
+        gripRing.position.y = -10.5;
+        shellGroup.add(gripRing);
+
+        // Selector Ring (The Dial)
+        const ringGeo = new THREE.CylinderGeometry(CONFIG.od/2 + 0.5, CONFIG.od/2 + 0.5, 8, 32);
+        const ring = new THREE.Mesh(ringGeo, matSelector);
+        ring.position.y = -5; // Just above grip
+        ring.castShadow = true;
+        shellGroup.add(ring);
+
+        // Add Colored Indicator Tiles to Ring
+        MODULES.forEach((mod, i) => {
+            const angle = (Math.PI * 2 / 7) * i;
+            const tileGeo = new THREE.BoxGeometry(3, 4, 0.5);
+            const tileMat = new THREE.MeshBasicMaterial({ color: mod.color });
+            const tile = new THREE.Mesh(tileGeo, tileMat);
+            
+            // Position on ring surface
+            const r = CONFIG.od/2 + 0.5;
+            tile.position.set(Math.sin(angle) * r, 0, Math.cos(angle) * r);
+            tile.lookAt(0, 0, 0); // Face inward
+            tile.rotateY(Math.PI); // Face outward
+            ring.add(tile);
+        });
+
+        // Upper Barrel (Black)
+        const upperGeo = new THREE.CylinderGeometry(CONFIG.od/2, CONFIG.od/2, 50, 32);
+        const upper = new THREE.Mesh(upperGeo, matBodyBlack);
+        upper.position.y = 25;
+        upper.castShadow = true;
+        shellGroup.add(upper);
+
+        // Clip (Chrome)
+        const clipGroup = new THREE.Group();
+        const clipBase = new THREE.Mesh(new THREE.BoxGeometry(4, 35, 3), matChrome);
+        clipBase.position.set(CONFIG.od/2 + 1.5, 30, 0);
+        
+        // Clip arm curvature
+        const clipArmGeo = new THREE.CylinderGeometry(2, 2, 35, 8);
+        const clipArm = new THREE.Mesh(clipArmGeo, matChrome);
+        clipArm.scale.z = 0.5;
+        clipArm.position.set(CONFIG.od/2 + 3, 30, 0);
+        
+        shellGroup.add(clipBase);
+        shellGroup.add(clipArm);
+
+
+        // === 5.2 INTERNAL DRUM ===
+        const drumGroup = new THREE.Group();
+        penGroup.add(drumGroup);
+
+        // Drum Body
+        const drumBodyGeo = new THREE.CylinderGeometry(CONFIG.drumOD/2, CONFIG.drumOD/2, 50, 16);
+        const drumBody = new THREE.Mesh(drumBodyGeo, matInternal);
+        drumBody.position.y = 0;
+        drumGroup.add(drumBody);
+
+        // === 5.3 CARTRIDGES ===
+        const cartridges = [];
+
+        MODULES.forEach((mod, i) => {
+            const angle = (Math.PI * 2 / 7) * i;
+            const x = Math.sin(angle) * CONFIG.drumRadius;
+            const z = Math.cos(angle) * CONFIG.drumRadius;
+
+            const cartGroup = new THREE.Group();
+            cartGroup.position.set(x, 0, z);
+            cartGroup.userData = { angle: angle, restX: x, restZ: z };
+
+            if (mod.type === 'tape') {
+                // Tape Cassette (White plastic body)
+                const tapeBodyGeo = new THREE.BoxGeometry(CONFIG.tapeWidth, 38, 4.5);
+                const tapeMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee });
+                const tapeBody = new THREE.Mesh(tapeBodyGeo, tapeMat);
+                
+                const appGeo = new THREE.BoxGeometry(CONFIG.tapeWidth, 4, 3);
+                const app = new THREE.Mesh(appGeo, new THREE.MeshStandardMaterial({color:0xdddddd}));
+                app.position.y = -21;
+                tapeBody.add(app);
+
+                // Roller
+                const fWheelGeo = new THREE.CylinderGeometry(1, 1, 0.5, 12);
+                const fWheel = new THREE.Mesh(fWheelGeo, new THREE.MeshBasicMaterial({color:0x111111}));
+                fWheel.rotation.z = Math.PI/2;
+                fWheel.position.set(CONFIG.tapeWidth/2 + 0.2, -20, 0);
+                tapeBody.add(fWheel);
+
+                cartGroup.add(tapeBody);
+                
+            } else {
+                // Ink Refills
+                const tubeGeo = new THREE.CylinderGeometry(1.1, 1.1, 67, 12);
+                const tubeMat = new THREE.MeshStandardMaterial({ color: (mod.type==='std'?0xcccccc:mod.color), metalness: 0.6 });
+                const tube = new THREE.Mesh(tubeGeo, tubeMat);
+                cartGroup.add(tube);
+
+                // Tip
+                const tipGeo = new THREE.CylinderGeometry(1.1, 0.5, 3, 12);
+                const tipMat = new THREE.MeshStandardMaterial({ color: mod.color, emissive: mod.color, emissiveIntensity: 0.3 });
+                const tipMesh = new THREE.Mesh(tipGeo, tipMat);
+                tipMesh.position.y = -35;
+                cartGroup.add(tipMesh);
+            }
+            
+            drumGroup.add(cartGroup);
+            cartridges.push(cartGroup);
+        });
+
+
+        // === 5.4 ACTUATION & TOP ===
+        const actuatorGroup = new THREE.Group();
+        penGroup.add(actuatorGroup);
+
+        // Top Cap (Black)
+        const capGeo = new THREE.CylinderGeometry(6, 6, 12, 32);
+        const cap = new THREE.Mesh(capGeo, matBodyBlack);
+        cap.position.y = 76;
+        actuatorGroup.add(cap);
+
+        // === 5.5 ERASER UNIT ===
+        const eraserGroup = new THREE.Group();
+        actuatorGroup.add(eraserGroup); 
+
+        // Eraser Holder
+        const holderGeo = new THREE.CylinderGeometry(4, 4, 4, 32);
+        const holder = new THREE.Mesh(holderGeo, matBodyBlack);
+        holder.position.y = 82;
+        eraserGroup.add(holder);
+
+        // White Eraser
+        const rubberGeo = new THREE.CylinderGeometry(3.8, 3.8, 8, 32);
+        const rubberMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1.0 });
+        const rubber = new THREE.Mesh(rubberGeo, rubberMat);
+        rubber.position.y = 86;
+        eraserGroup.add(rubber);
+
+
+        // --- 6. ANIMATION LOGIC ---
+        function updateMaterials() {
+            matBodyBlack.clippingPlanes = STATE.cutaway ? [clipPlane] : [];
+            matGrip.clippingPlanes = STATE.cutaway ? [clipPlane] : [];
+            matChrome.clippingPlanes = STATE.cutaway ? [clipPlane] : [];
+            matSelector.clippingPlanes = STATE.cutaway ? [clipPlane] : [];
+            shellGroup.visible = STATE.shellVisible;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Drum Rotation
+            const step = (Math.PI * 2 / 7);
+            const targetAngle = -(step * STATE.index);
+            STATE.drumAngle += (targetAngle - STATE.drumAngle) * 0.1;
+            drumGroup.rotation.y = STATE.drumAngle;
+            ring.rotation.y = STATE.drumAngle;
+
+            // Cartridge Extension
+            cartridges.forEach((cart, i) => {
+                let targetY = 0;
+                let targetBendX = 0;
+                let targetBendZ = 0;
+
+                if (i === STATE.index && STATE.extended) {
+                    targetY = -20; // Push down
+                    const factor = 0.7; 
+                    targetBendX = -cart.userData.restX * factor; 
+                    targetBendZ = -cart.userData.restZ * factor;
+                }
+
+                cart.position.y += (targetY - cart.position.y) * 0.2;
+                cart.position.x += ((cart.userData.restX + targetBendX) - cart.position.x) * 0.2;
+                cart.position.z += ((cart.userData.restZ + targetBendZ) - cart.position.z) * 0.2;
+                
+                if (i === STATE.index && STATE.extended) {
+                    cart.rotation.x = Math.sin(STATE.drumAngle) * 0.05;
+                    cart.rotation.z = Math.cos(STATE.drumAngle) * 0.05;
+                } else {
+                    cart.rotation.set(0,0,0);
+                }
+            });
+
+            // Actuator Movement
+            const actTargetY = STATE.extended ? -5 : 0;
+            actuatorGroup.position.y += (actTargetY - actuatorGroup.position.y) * 0.2;
+
+            // Eraser Twist
+            const eraserTargetY = STATE.eraserPos * 8;
+            eraserGroup.position.y += (eraserTargetY - eraserGroup.position.y) * 0.1;
+            eraserGroup.rotation.y += (STATE.eraserPos * Math.PI * 2 - eraserGroup.rotation.y) * 0.1;
+
+            // Explode Logic
+            const shellTargetY = STATE.exploded ? 60 : 0;
+            const drumTargetY = STATE.exploded ? -40 : 0;
+            shellGroup.position.y += (shellTargetY - shellGroup.position.y) * 0.1;
+            drumGroup.position.y += (drumTargetY - drumGroup.position.y) * 0.1;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // --- 7. UI EVENTS ---
+        document.getElementById('btn-rotate').addEventListener('click', () => {
+            STATE.extended = false; 
+            document.getElementById('click-status').innerText = "OFF";
+            document.getElementById('btn-click').classList.remove('active');
+            
+            STATE.index = (STATE.index + 1) % 7;
+            
+            const mod = MODULES[STATE.index];
+            document.getElementById('tool-name').innerText = mod.name;
+            document.getElementById('tool-name').style.color = '#' + mod.color.toString(16).padStart(6,'0');
+        });
+
+        document.getElementById('btn-click').addEventListener('click', () => {
+            STATE.extended = !STATE.extended;
+            const btn = document.getElementById('btn-click');
+            const status = document.getElementById('click-status');
+            
+            if (STATE.extended) {
+                btn.classList.add('active');
+                status.innerText = "DEPLOYED";
+            } else {
+                btn.classList.remove('active');
+                status.innerText = "OFF";
+            }
+        });
+
+        document.getElementById('btn-twist').addEventListener('click', () => {
+            STATE.eraserPos = STATE.eraserPos === 0 ? 1 : 0;
+            document.getElementById('eraser-status').innerText = (STATE.eraserPos * 100) + "%";
+        });
+
+        document.getElementById('btn-cutaway').addEventListener('click', () => {
+            STATE.cutaway = !STATE.cutaway;
+            updateMaterials();
+            renderer.localClippingEnabled = STATE.cutaway;
+            document.getElementById('btn-cutaway').classList.toggle('active');
+        });
+
+        document.getElementById('btn-explode').addEventListener('click', () => {
+            STATE.exploded = !STATE.exploded;
+            document.getElementById('btn-explode').classList.toggle('active');
+        });
+        
+        document.getElementById('btn-shell').addEventListener('click', () => {
+            STATE.shellVisible = !STATE.shellVisible;
+            updateMaterials();
+            document.getElementById('btn-shell').classList.toggle('active');
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+
+    </script>
+</body>
+</html>
